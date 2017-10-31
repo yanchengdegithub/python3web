@@ -31,7 +31,7 @@ centos6.5+python3.5.1+mysql5.7+vue2+uikit3
 
 4. 在www目录下执行 ./pymonitor.py app.py
 5. 通过浏览器查看博客！！！
-
+   ![](https://github.com/yanchengdegithub/python3web/raw/master/www/other/py_blog_index.png)
 
 > 注意：如果数据库及服务器无法访问可能是因为iptables的阻止！
 
