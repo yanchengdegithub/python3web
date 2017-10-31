@@ -14,7 +14,7 @@ python3web
     
 ## 开发环境
 centos6.5+python3.5.1+mysql5.7+vue2+uikit3
-## 准备好环境之后
+## 博客搭建
 
 1. 通过pip安装python扩展模块，如下：
   ```Python
