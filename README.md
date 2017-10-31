@@ -12,7 +12,8 @@ python3web
 * 用户管理
 * 自适应支持移动终端
     
-## 开发环境 centos6.5+python3.5.1+mysql5.7+vue2+uikit3
+## 开发环境
+centos6.5+python3.5.1+mysql5.7+vue2+uikit3
 ## 准备好环境之后
 
 1. 通过pip安装python扩展模块，如下：
