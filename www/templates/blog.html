@@ -1,0 +1,136 @@
+{% extends '__base__.html' %}
+
+{% block title %}{{ blog.name }}{% endblock %}
+
+{% block beforehead %}
+<link rel="stylesheet" href="/static/plugs/iShare/style/fonts/iconfont.css">
+<link rel="stylesheet" href="/static/plugs/iShare/style/css/ishare.css">
+<script src="/static/plugs/iShare/iShare.js"></script>
+<script>
+var comment_url = '/api/blogs/{{ blog.id }}/comments';
+$(function () {
+    var $form = $('#form-comment');
+    $form.submit(function (e) {
+        e.preventDefault();
+        $form.showFormError('');
+        var content = $form.find('textarea').val().trim();
+        if (content==='') {
+            return $form.showFormError('请输入评论内容！');
+        }
+        $form.postJSON(comment_url, { content: content }, function (err, result) {
+            if (err) {
+                return $form.showFormError(err);
+            }
+            refresh();
+        });
+    });
+});
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="uk-width-3-4@m">
+    <div class="bgcolorFFF uk-padding-small">
+            <article class="uk-article">
+                <h2>{{ blog.name }}</h2>
+                <p class="uk-article-meta">发表于{{ blog.created_at|datetime }}</p>
+                <p>{{ blog.html_content|safe }}</p>
+            </article>
+        <div uk-grid>
+            <div class="uk-width-1-2@m uk-margin-small-top">创建人：{{blog.user_name}}</div>
+            <div class="uk-width-1-2@m iShare iShare-32 uk-text-right" id="iShare"></div>
+        </div>
+        <hr class="uk-article-divider">
+
+    {% if __user__ %}
+        <h3>发表评论</h3>
+
+        <article class="uk-comment">
+            <header class="uk-comment-header uk-grid-medium uk-flex-middle" uk-grid>
+                <div class="uk-width-auto">
+                    <img class="uk-comment-avatar uk-border-circle" width="50" height="50" src="{{ __user__.image }}">
+                </div>
+                <div class="uk-width-expand">
+                    <h4 class="uk-comment-title uk-margin-remove"><a class="uk-link-reset" href="#">{{ __user__.name }}</a></h4>
+                </div>
+            </header>
+            <div class="uk-comment-body">
+                <form id="form-comment" class="uk-form">
+                    <div class="uk-alert uk-alert-danger uk-hidden"></div>
+                    <div class="uk-form-row">
+                        <textarea rows="6" placeholder="说点什么吧" class="uk-textarea uk-width-1-1"></textarea>
+                    </div>
+                    <div class="uk-form-row uk-margin">
+                        <button type="submit" class="uk-button uk-button-primary"><i uk-icon="icon: comment"></i> 发表评论</button>
+                    </div>
+                </form>
+            </div>
+        </article>
+        <hr class="uk-article-divider">
+    {% endif %}
+
+        <h3>最新评论</h3>
+        <!-- 锚点 -->
+        <a name="comment_list" id="comment_list"> </a>
+        <ul class="uk-comment-list">
+            {% for comment in comments %}
+            <li class="uk-margin-small-top uk-box-shadow-medium">
+                <article class="uk-comment uk-comment-primary uk-visible-toggle">
+                    <header class="uk-comment-header uk-position-relative">
+                        <div class="uk-grid-medium uk-flex-middle" uk-grid>
+                            <div class="uk-width-auto">
+                                <img class="uk-comment-avatar uk-border-circle" width="50" height="50" src="{{ comment.user_image }}">
+                            </div>
+                            <div class="uk-width-expand">
+                                <h4 class="uk-comment-title">{{ comment.user_name }} {% if comment.user_id==blog.user_id %}(作者){% endif %}</h4>
+                                <p class="uk-comment-meta">{{ comment.created_at|datetime }}</p>
+                            </div>
+                        </div>
+                        <div class="uk-position-top-right uk-position-small">
+                            <a class="uk-link-muted" href="###"><i uk-icon="icon: reply"></i>回复</a>
+                        </div>
+                    </header>
+                    <div class="uk-comment-body">
+                        {{ comment.html_content|safe }}
+                    </div>
+                </article>
+            </li>
+            {% else %}
+            <p>还没有人评论...</p>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+    <!-- 侧边栏 -->
+    {% include "__sidebar__.html" ignore missing %}
+
+{% endblock %}
+
+{% block afterscript %}
+    <script type="text/javascript">
+        $(function(){
+            (new iShare({container:'#iShare',config:{
+                title: '{{ blog.name }}',
+                description: '{{ blog.summary }}',
+                url: 'https://github.com/zhansingsong',
+                isAbroad: false,
+                isTitle: true,
+                initialized: true,
+                WXoptions:{
+                    //evenType: 'click',
+                    isTitleVisibility: true,
+                    title: '微信扫一扫',
+                    isTipVisibility: true,
+                    tip: '很高兴和你成为朋友',
+                    bgcolor: '#e8ffe4',
+                    qrcodeW: 130,
+                    qrcodeH: 120,
+                    qrcodeBgc: "#fff",
+                    qrcodeFgc: "#000"
+                }
+            }}));
+        });
+    </script>
+{% endblock %}

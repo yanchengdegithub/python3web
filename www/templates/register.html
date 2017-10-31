@@ -1,0 +1,102 @@
+{% extends '__base__.html' %}
+
+{% block title %}注册{% endblock %}
+
+{% block beforehead %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="uk-width-2-3">
+        <form id="vm" v-on:submit.prevent="submit">
+            <fieldset class="uk-fieldset">
+                <div class="uk-alert uk-alert-danger uk-hidden"></div>
+                <legend class="uk-legend uk-active">
+                    <a href="/" class="uk-h3 uk-heading-bullet uk-heading-bullet-cust">欢迎注册！！！</a>
+                </legend>
+            </fieldset>
+
+
+            <div class="uk-margin">
+                <label class="uk-form-label">名字:</label>
+                <div class="uk-form-controls">
+                    <input v-model="name" name="name" type="text" maxlength="50" placeholder="名字" class="uk-input">
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label">电子邮件:</label>
+                <div class="uk-form-controls">
+                    <input v-model="email" name="email" type="text" maxlength="50" placeholder="your-name@example.com" class="uk-input">
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label">输入口令:</label>
+                <div class="uk-form-controls">
+                    <input v-model="password1" name="password1" type="password" maxlength="50" placeholder="输入口令" class="uk-input">
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label">重复口令:</label>
+                <div class="uk-form-controls">
+                    <input v-model="password2" name="password2" type="password" maxlength="50" placeholder="重复口令" class="uk-input">
+                </div>
+            </div>
+            <div class="uk-margin">
+                <button type="submit" class="uk-button uk-button-primary">
+                    <i class="uk-margin-small-right uk-icon" uk-icon="icon: user"></i>注册
+                </button>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}
+
+{% block afterscript %}
+    <script>
+        function validateEmail(email) {
+            var re = /^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$/;
+            return re.test(email.toLowerCase());
+        }
+        
+        $(function(){
+            var vm = new Vue({
+                el: '#vm',
+                data: {
+                    name: '',
+                    email: '',
+                    password1: '',
+                    password2: ''
+                },
+                methods: {
+                    submit: function (event) {
+                        event.preventDefault();
+                        var $form = $('#vm');
+                        if (! this.name.trim()) {
+                            return $form.showFormError({data:'name', message:'请输入名字'});
+                        }
+                        if (! validateEmail(this.email.trim().toLowerCase())) {
+                            return $form.showFormError({data:'email', message:'请输入正确的Email地址'});
+                        }
+                        if (this.password1.length < 6) {
+                            return $form.showFormError({data:'password1', message:'口令长度至少为6个字符'});
+                        }
+                        if (this.password1 !== this.password2) {
+                            return $form.showFormError({data:'password2', message:'两次输入的口令不一致'});
+                        }
+                        var email = this.email.trim().toLowerCase();
+                        $form.postJSON('/api/users', {
+                            name: this.name.trim(),
+                            email: email,
+                            passwd: CryptoJS.SHA1(email + ':' + this.password1).toString()
+                        }, function (err, r) {
+                            if (!err) {
+                                return location.assign('/');
+                            }
+                        });
+                    }
+                }
+            });
+            $('#vm').show();
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends '__base__.html' %}
+
+{% block title %}日志{% endblock %}
+
+{% block content %}
+
+    <div class="uk-width-3-4@m">
+        <div class="bgcolorFFF uk-padding-small">
+        {% for blog in blogs %}
+            <article class="uk-article">
+                {% if loop.first %}
+                    <h1 class="uk-heading-bullet uk-heading-bullet-cust"><span>{{searchTitle}}</span></h1>
+                {% endif %}
+                <h3><a class="uk-link-reset uk-text-bold uk-text-truncate uk-display-block"  href="/blog/{{ blog.id }}">{{ blog.name }}</a></h3>
+                <p>{{ blog.summary }}</p>
+
+
+                <div class="uk-grid-small" uk-grid>
+                    <div class="uk-grid-small uk-width-3-5" uk-grid>
+                        <div class="uk-article-meta">
+                            <img class="uk-border-circle" width="24" height="24" src="{% if __user__ %} {{__user__.image}} {% else %}/static/img/my_img.jpg {% endif %}">
+                            <a class="uk-button uk-button-text" href="#"> yancheng</a>
+                        </div>
+                        <div class="uk-article-meta">
+                            发表于{{ blog.created_at|datetime }}
+                        </div>
+                        <div class="uk-article-meta">
+                            <i class="iconfont">&#xe600;</i>{{ blog.read_total }}
+                        </div>
+                        <div class="uk-article-meta">
+                            <a href="/blog/{{ blog.id }}#comment_list">
+                                <i uk-icon="icon: comment; ratio: 0.8"></i>
+                                {{ blog.comments_num }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="uk-width-2-5 uk-text-right">
+                        <a class="uk-button uk-button-primary uk-button-small" href="/blog/{{ blog.id }}">继续阅读</a>
+                    </div>
+                </div>
+            </article>
+            <hr class="uk-article-divider">
+        {% endfor %}
+        {{ pagination('/?page=', page) }}
+        </div>
+    </div>
+
+    <!-- 侧边栏 -->
+    {% include "__sidebar__.html" ignore missing %}
+
+{% endblock %}

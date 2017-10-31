@@ -1,0 +1,166 @@
+{% extends '__base__.html' %}
+
+{% block title %}编辑日志{% endblock %}
+
+{% block beforehead %}
+<script src="https://unpkg.com/wangeditor@3.0.9/release/wangEditor.min.js"></script>
+<script>
+var
+    ID = '{{ id }}',
+    action = '{{ action }}',
+    vm;
+function initVM(blog) {
+    vm = new Vue({
+        el: '#vm',
+        data: blog,
+        methods: {
+            submit: function (event) {
+                event.preventDefault();
+                var $form = $('#vm').find('form');
+                this.$data.content = editorControl.txt.html();
+                $form.postJSON(action, this.$data, function (err, r) {
+                    if (err) {
+                        $form.showFormError(err);
+                    }
+                    else {
+                        return location.assign('/manage/blogs');
+                    }
+                });
+            }
+        }
+    });
+    $('#vm').show();
+}
+
+var editorControl;
+function initEdit(content){
+    var E = window.wangEditor;
+        editorControl = new E('#editorControl');
+        editorControl.customConfig.uploadImgShowBase64 = true;
+        editorControl.customConfig.menus = [
+                                                'head',  // 标题
+                                                'bold',  // 粗体
+                                                'italic',  // 斜体
+                                                'underline',  // 下划线
+                                                'strikeThrough',  // 删除线
+                                                'foreColor',  // 文字颜色
+                                                'backColor',  // 背景颜色
+                                                'link',  // 插入链接
+                                                'list',  // 列表
+                                                'justify',  // 对齐方式
+                                                'quote',  // 引用
+                                                'emoticon',  // 表情
+                                                'image',  // 插入图片
+                                                'table',  // 表格
+                                                'video',  // 插入视频
+                                                'code',  // 插入代码
+                                                'undo',  // 撤销
+                                                'redo',  // 重复
+                                                'fullscreen'
+                                            ];
+        editorControl.create();
+        editorControl.txt.html(content);
+}
+
+function getCategory(callback){
+    getJSON('/api/category', function (err, data) {
+            if (err) {
+                return fatal(err);
+            }
+            callback(data);
+        });
+}
+$(function () {
+    if (ID) {
+        getJSON('/api/blogs/' + ID, function (err, blog) {
+            if (err) {
+                return fatal(err);
+            }
+            $('#loading').hide();
+            blog.category = [{}];
+            initVM(blog);
+            initEdit(blog.content);
+            getCategory(function(data){
+                vm.category = data.category;
+            });
+        });
+    }
+    else {
+        $('#loading').hide();
+        initVM({
+                name: '',
+                summary: '',
+                content: '',
+                category_id:'0',
+                category:[{}]
+            });
+        initEdit('');
+        getCategory(function(data){
+            vm.category = data.category;
+        });
+    }
+    
+});
+</script>
+
+{% endblock %}
+
+{% block content %}
+    <div class="uk-width-1-1 uk-margin-bottom">
+        <div class="uk-panel uk-panel-box">
+            <ul class="uk-breadcrumb">
+                <li><a href="/manage/comments">评论</a></li>
+                <li><a href="/manage/blogs">日志</a></li>
+                <li><a href="/manage/users">用户</a></li>
+                <li><a href="/manage/category">分类</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="error" class="uk-width-1-1">
+    </div>
+
+    <div id="loading" class="uk-width-1-1 uk-text-center">
+        <span><i class="uk-icon-spinner uk-icon-medium uk-icon-spin"></i> 正在加载...</span>
+    </div>
+
+    <div id="vm" class="uk-width-2-3">
+        <form v-on:submit.prevent="submit">
+            <div class="uk-alert uk-alert-danger uk-hidden"></div>
+            <div class="uk-margin">
+                <label class="uk-form-label">标题:</label>
+                <div class="uk-form-controls">
+                    <input v-model="name" name="name" type="text" placeholder="标题" class="uk-input">
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label">摘要:</label>
+                <div class="uk-form-controls">
+                    <textarea v-model="summary" rows="4" name="summary" placeholder="摘要" class="uk-textarea" style="resize:none;"></textarea>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label">内容:</label>
+                <div class="uk-form-controls">
+                    <div id="editorControl" class="bgcolorFFF"></div>
+                    <input type="hidden" name="content" v-model="content" value="">
+                </div>
+
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label">分类:</label>
+                <div class="uk-form-controls">
+                    <select class="uk-select" v-model="category_id">
+                        <option value="0">请选择</option>
+                        <option v-for="option in category" v-bind:value="option.id" v-text="option.name"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-save"></i> 保存</button>
+                <a href="/manage/blogs" class="uk-button"><i class="uk-icon-times"></i> 取消</a>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}

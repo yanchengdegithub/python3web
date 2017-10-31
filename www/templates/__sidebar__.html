@@ -1,0 +1,96 @@
+<div class="uk-width-1-4@m">
+        <div uk-grid>
+            <div class="uk-width-1-1">
+                <div class="uk-card uk-card-default uk-text-center">
+                    <div class="uk-card-header">
+                        <img class="uk-border-circle" width="100" height="100" src="{% if __user__ %} {{__user__.image}} {% else %}/static/img/my_img.jpg {% endif %}">
+                    </div>
+                    <div class="uk-card-body">
+                        <h4>yancheng</h4>
+                        <p>欢迎来到我的博客!!!</p>
+                        <ul class="uk-breadcrumb">
+                            <li><a href="#">微信：My_Alfei</a></li>
+                            <li class="uk-disabled"><a href="#">QQ：921828151</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="uk-width-1-1" id="report_month_blogs">
+                <div class="uk-card  uk-card-default">
+                        <div class="uk-card-body">
+                            <h4>文章归档</h4>
+                            <ul class="uk-list uk-list-divider">
+                                <li v-for="(rmb, key) in report_month_blogs">
+                                    <a :href="'/blogs/date/'+key" v-text="key" class="uk-link-reset"></a><span class="uk-badge uk-float-right"  v-text="rmb"></span>
+                                </li>
+                            </ul>
+                        </div>
+                </div>
+            </div>
+
+            <div class="uk-width-1-1" id="category_blogs">
+                <div class="uk-card  uk-card-default">
+                        <div class="uk-card-body">
+                            <h4>文章分类</h4>
+                            <ul class="uk-list uk-list-divider">
+                                <li v-for="item in category_blogs">
+                                    <a :href="'/blogs/category/'+item.id" v-text="item.name" class="uk-link-reset"></a>
+                                </li>
+                            </ul>
+                        </div>
+                </div>
+            </div>
+
+            <div class="uk-width-1-1">
+                <div class="uk-card  uk-card-default">
+                    <div class="uk-card-body">
+                        <h4>友情链接</h4>
+                        <ul class="uk-list">
+                            <li><i uk-icon="icon: link"></i> <a target="_blank" href="https://www.liaoxuefeng.com/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000">Python教程</a></li>
+                            <li><i uk-icon="icon: link"></i> <a target="_blank" href="https://github.com/yanchengdegithub/python3web">Git教程</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+</div>
+
+<script>
+
+    $(function() {
+        /*初始化文章归档*/
+        getJSON('/api/reportMonthBlogs', 
+            function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+            $('#loading').hide();
+
+            var vm = new Vue({
+                el: '#report_month_blogs',
+                data: {
+                    report_month_blogs: results
+                }
+            });
+        });
+
+        /*初始化文章分类*/
+        getJSON('/api/category', 
+            function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+            $('#loading').hide();
+
+            var vm = new Vue({
+                el: '#category_blogs',
+                data: {
+                    category_blogs: results.category
+                }
+            });
+        });
+    });
+
+</script>

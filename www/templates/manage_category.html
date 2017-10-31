@@ -1,0 +1,115 @@
+{% extends '__base__.html' %}
+
+{% block title %}分类{% endblock %}
+
+{% block beforehead %} {% endblock %}
+
+{% block content %}
+
+    <div class="uk-width-1-1 uk-margin-bottom uk-margin-bottom uk-padding-small bgcolorFFF">
+        <div class="uk-panel uk-panel-box">
+            <ul class="uk-breadcrumb">
+                <li><a href="/manage/comments">评论</a></li>
+                <li><a href="/manage/blogs" >日志</a></li>
+                <li><a href="/manage/users">用户</a></li>
+                <li class="uk-active"><span>分类</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="error" class="uk-width-1-1">
+    </div>
+
+    <div id="loading" class="uk-width-1-1 uk-text-center">
+        <span><i class="uk-icon-spinner uk-icon-medium uk-icon-spin"></i> 正在加载...</span>
+    </div>
+
+    <div id="vm" class="uk-width-1-1 bgcolorFFF">
+        <a href="#modal-category" class="uk-button uk-button-primary uk-margin-small-top" uk-toggle><i class="uk-icon-plus"></i> 新分类</a>
+
+        <table class="uk-table uk-table-hover uk-table-divider">
+            <thead>
+                <tr>
+                    <th>分类名</th>
+                    <th>顺序</th>
+                    <th>创建人</th>
+                    <th>创建时间</th>
+                    <th class="uk-width-small">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="_category in category" >
+                    <td>
+                        <a target="_blank" v-bind:href="'/category/'+_category.id" v-text="_category.name"></a>
+                    </td>
+                    <td>
+                        <span v-text="_category.orders"></span>
+                    </td>
+                    <td>
+                        <a target="_blank" v-bind:href="'/user/'+_category.user_id" v-text="_category.user_name"></a>
+                    </td>
+                    <td>
+                        <span v-text="_category.created_at.toDateTime()"></span>
+                    </td>
+                    <td>
+                        <a href="#0" v-on:click="edit_category(_category)"><i uk-icon="icon:file-edit"></i></a>
+                        <a href="#0" v-on:click="delete_category(_category)"><i uk-icon="icon:trash"></i></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 编辑分类 -->
+    <div id="modal-category" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">新分类</h2>
+        <p>loading</p>
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">取 消</button>
+            <button class="uk-button uk-button-primary" type="button">保 存</button>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block afterscript %}
+
+<script>
+    function initVM(data) {
+        var vm = new Vue({
+            el: '#vm',
+            data: {
+                category: data.category,
+            },
+            methods: {
+                edit_category: function (category) {
+                    location.assign('/manage/category/edit?id=' + category.id);
+                },
+                delete_category: function (category) {
+                    if (confirm('确认要删除“' + category.name + '”？删除后不可恢复！')) {
+                        postJSON('/api/category/' + category.id + '/delete', function (err, r) {
+                            if (err) {
+                                return alert(err.message || err.error || err);
+                            }
+                            refresh();
+                        });
+                    }
+                }
+            }
+        });
+        $('#vm').show();
+    }
+    
+    $(function() {
+        getJSON('/api/category', function (err, results) {console.log(err);
+            if (err) {
+                return fatal(err);
+            }
+            $('#loading').hide();
+            initVM(results);
+        });
+    });
+</script>
+
+{% endblock %}
