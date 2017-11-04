@@ -328,6 +328,60 @@ async def api_category():
 
     return dict(category=category)
 
+#添加分类
+@post('/api/category')
+async def api_create_category(request, *, name, orders):
+    check_admin(request)
+    if not name or not name.strip():
+        raise APIValueError('name', '分类名称不能为空！')
+    if not str(orders).strip():
+        raise APIValueError('orders', '分类顺序不能为空！')
+
+    category_exists = await CategoryModel.Category.findAll('name=?', [name])
+    if len(category_exists) > 0:
+        raise APIValueError('name', '该分类已存在！')
+
+    category = CategoryModel.Category(name=name, orders=orders, user_id=request.__user__.id, path_id='/')
+    last_insertid = await category.save()
+
+    category.id = last_insertid
+    category.user_name = request.__user__.name
+    category.actionType = 'create'
+    return category
+
+#修改分类
+@post('/api/category/{id}')
+async def api_update_category(id, request, *, name, orders):
+    check_admin(request)
+    category = await CategoryModel.Category.find(id)
+    if not name or not name.strip():
+        raise APIValueError('name', '分类名称不能为空！')
+    if not str(orders).strip():
+        raise APIValueError('orders', '分类顺序不能为空！')
+
+    category_exists = await CategoryModel.Category.findAll('name=? and id !=?', [name, id])
+    if len(category_exists) > 0:
+        raise APIValueError('name', '该分类已存在！')
+
+    category.name = name.strip()
+    category.orders = orders
+    category.user_name = request.__user__.name
+    await category.update()
+    category.actionType = 'update'
+    return category
+
+
+#删除分类
+@post('/api/category/{id}/delete')
+async def api_delete_comments(request, *, id):
+    check_admin(request)
+    category = await CategoryModel.Category.find(id)
+    if category is None:
+        raise APIResourceNotFoundError('Category')
+    await category.remove();
+    return dict(id=id)
+
+
 #获取每月归档日志
 @get('/api/reportMonthBlogs')
 async def api_reportMonthBlogs():

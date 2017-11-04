@@ -38,9 +38,9 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="_category in category" >
+                <tr v-for="(_category, index) in category" :key="_category.id">
                     <td>
-                        <a target="_blank" v-bind:href="'/category/'+_category.id" v-text="_category.name"></a>
+                        <span v-text="_category.name"></span>
                     </td>
                     <td>
                         <span v-text="_category.orders"></span>
@@ -52,8 +52,8 @@
                         <span v-text="_category.created_at.toDateTime()"></span>
                     </td>
                     <td>
-                        <a href="#0" v-on:click="edit_category(_category)"><i uk-icon="icon:file-edit"></i></a>
-                        <a href="#0" v-on:click="delete_category(_category)"><i uk-icon="icon:trash"></i></a>
+                        <a href="#modal-category" uk-toggle v-on:click="edit_category(_category, index)"><i uk-icon="icon:file-edit"></i></a>
+                        <a href="#0" v-on:click="delete_category(_category, index)"><i uk-icon="icon:trash"></i></a>
                     </td>
                 </tr>
             </tbody>
@@ -61,44 +61,108 @@
     </div>
 
     <!-- 编辑分类 -->
-    <div id="modal-category" uk-modal>
-    <div class="uk-modal-dialog uk-modal-body">
-        <h2 class="uk-modal-title">新分类</h2>
-        <p>loading</p>
-        <p class="uk-text-right">
-            <button class="uk-button uk-button-default uk-modal-close" type="button">取 消</button>
-            <button class="uk-button uk-button-primary" type="button">保 存</button>
-        </p>
+    <div id="modal-category"  uk-modal>
+        <div class="uk-modal-dialog uk-modal-body">
+            <h2 class="uk-modal-title">新分类</h2>
+            <form v-on:submit.prevent="submit">
+                <div class="uk-alert uk-alert-danger uk-hidden"></div>
+                <p>
+                    <fieldset class="uk-fieldset">
+
+                        <div class="uk-margin">
+                            <input class="uk-hidden" type="hide" name="id" v-model="row.id">
+                            <input class="uk-input" v-model="row.name" type="text" name="name" placeholder="分类名称">
+                        </div>
+
+                        <div class="uk-margin">
+                            <input class="uk-input" v-model.number="row.orders"  type="number" name="orders" placeholder="分类顺序">
+                        </div>
+
+                    </fieldset>
+                    
+                </p>
+                <p class="uk-text-right">
+                    <button class="uk-button uk-button-default uk-modal-close" type="button">取 消</button>
+                    <button class="uk-button uk-button-primary" type="submit"><i uk-icon="icon:check"></i> 保 存</button>
+                </p>
+            </form>
+        </div>
     </div>
-</div>
 {% endblock %}
 
 {% block afterscript %}
 
 <script>
+    var list_vm, category_vm, edit_index = null;
     function initVM(data) {
-        var vm = new Vue({
+
+        //绑定分类列表
+        list_vm = new Vue({
             el: '#vm',
             data: {
                 category: data.category,
             },
             methods: {
-                edit_category: function (category) {
-                    location.assign('/manage/category/edit?id=' + category.id);
+                edit_category: function (category, index) {
+                    category_action = '/api/category/'+category.id;
+                    category_vm.$data.row = JSON.parse(JSON.stringify(category));
+                    edit_index = index;
                 },
-                delete_category: function (category) {
+                delete_category: function (category, index) {
                     if (confirm('确认要删除“' + category.name + '”？删除后不可恢复！')) {
+                        var _this = this;
                         postJSON('/api/category/' + category.id + '/delete', function (err, r) {
                             if (err) {
                                 return alert(err.message || err.error || err);
                             }
-                            refresh();
+                            _this.category.splice(index,1);
                         });
                     }
                 }
             }
         });
         $('#vm').show();
+
+        //添加分类
+        var category_action = '/api/category';
+        category_vm = new Vue({
+            el: '#modal-category',
+            data: {
+                    row:
+                    {
+                        id: '',
+                        name: '',
+                        orders: 0
+                    }
+            },
+            methods:
+            {
+                submit: function (event)
+                {
+                    event.preventDefault();
+                    var $form = $('#modal-category').find('form');
+                    if (! this.row.name.trim()) {
+                        return $form.showFormError({data:'name', message:'请输入分类名称'});
+                    }
+                    if (isNaN(this.row.orders)) {
+                        return $form.showFormError({data:'orders', message:'请输入分类顺序'});
+                    }
+                    $form.postJSON(category_action, this.row, function (err, r) {
+                        if (err) {
+                            $form.showFormError(err);
+                        }
+                        else {
+                            if(r.actionType == 'create'){
+                                list_vm.category.push(r);
+                            }else{
+                                list_vm.category.splice(edit_index, 1, r);
+                            }
+                            UIkit.modal("#modal-category").hide();
+                        }
+                    });
+                }
+            }
+        });
     }
     
     $(function() {
@@ -109,6 +173,7 @@
             $('#loading').hide();
             initVM(results);
         });
+
     });
 </script>
 

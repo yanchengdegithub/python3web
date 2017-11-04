@@ -56,14 +56,15 @@ async def execute(sql, args, autocommit=True):
         try:
             async with conn.cursor(aiomysql.DictCursor) as cur:
                 await cur.execute(sql.replace('?', '%s'), args)
-                affected = cur.rowcount
+                #affected = cur.rowcount
+                #lastrowid = cur.lastrowid
             if not autocommit:
                 await conn.commit()
         except BaseException as e:
             if not autocommit:
                 await conn.rollback()
             raise
-        return affected
+        return cur
 
 def create_args_string(num):
     L = []
@@ -221,19 +222,24 @@ class Model(dict, metaclass=ModelMetaclass):
     async def save(self):
         args = list(map(self.getValueOrDefault, self.__fields__))
         args.append(self.getValueOrDefault(self.__primary_key__))
-        rows = await execute(self.__insert__, args)
+        cur = await execute(self.__insert__, args)
+        rows = cur.rowcount
         if rows != 1:
             logging.warn('failed to insert record: affected rows: %s' % rows)
+            return 0
+        return cur.lastrowid
 
     async def update(self):
         args = list(map(self.getValue, self.__fields__))
         args.append(self.getValue(self.__primary_key__))
-        rows = await execute(self.__update__, args)
+        cur = await execute(self.__update__, args)
+        rows = cur.rowcount
         if rows != 1:
             logging.warn('failed to update by primary key: affected rows: %s' % rows)
 
     async def remove(self):
         args = [self.getValue(self.__primary_key__)]
-        rows = await execute(self.__delete__, args)
+        cur = await execute(self.__delete__, args)
+        rows = cur.rowcount
         if rows != 1:
             logging.warn('failed to remove by primary key: affected rows: %s' % rows)
