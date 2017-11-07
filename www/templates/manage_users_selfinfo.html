@@ -1,0 +1,129 @@
+{% extends '__base__.html' %}
+
+{% block title %}用户{% endblock %}
+
+{% block beforehead %}{% endblock %}
+
+{% block content %}
+
+    <div class="uk-width-1-1 uk-margin-bottom uk-padding-small bgcolorFFF">
+        <div class="uk-panel uk-panel-box">
+            <ul class="uk-breadcrumb">
+                <li class="uk-active"><span>个人信息</span></li>
+            </ul>
+        </div>
+    </div>
+
+
+    <div class="uk-width-1-1 bgcolorFFF">
+
+        <div class="uk-card uk-card-default uk-text-center">
+            <div class="uk-card-header">
+                <img class="uk-border-circle" width="100" height="100" src="{% if __user__ %} {{__user__.image}} {% else %}/static/img/my_img.jpg {% endif %}">
+            </div>
+            <div class="uk-card-body">
+                <table class="uk-width-2-3 uk-margin-auto uk-table uk-table-hover">
+                    <tbody>
+                        <tr>
+                            <td><b>用户名</b></td>
+                            <td>{{__user__.name}}</td>
+                        </tr>
+                        <tr>
+                            <td><b>会员级别</b></td>
+                            <td>{% if __user__.admin %} 超级会员 {% else %} 普通会员 {%endif%}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Email</b></td>
+                            <td>{{__user__.email}}</td>
+                        </tr>
+                        <tr>
+                            <td><b>注册时间</b></td>
+                            <td>{{__user__.created_at|datetime}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+            </div>
+
+            <div class="uk-card-header">
+                修改密码
+            </div>
+            <div class="uk-card-body">
+                <form id="vm" v-on:submit.prevent="submit" class="uk-form-horizontal uk-width-2-3 uk-margin-auto">
+                    <fieldset class="uk-fieldset">
+                        <div class="uk-alert uk-alert-danger uk-hidden"></div>
+                    </fieldset>
+                    <div class="uk-margin">
+                        <label class="uk-form-label"><b>原密码:</b></label>
+                        <div class="uk-form-controls">
+                            <input v-model="oldpassword" name="oldpassword" type="password" maxlength="50" placeholder="原密码" class="uk-input">
+                        </div>
+                    </div>
+                    <div class="uk-margin">
+                        <label class="uk-form-label"><b>新密码:</b></label>
+                        <div class="uk-form-controls">
+                            <input v-model="password1" name="password1" type="password" maxlength="50" placeholder="新密码" class="uk-input">
+                        </div>
+                    </div>
+                    <div class="uk-margin">
+                        <label class="uk-form-label"><b>确认密码:</b></label>
+                        <div class="uk-form-controls">
+                            <input v-model="password2" name="password2" type="password" maxlength="50" placeholder="确认密码" class="uk-input">
+                        </div>
+                    </div>
+                    <div class="uk-margin">
+                        <button type="submit" class="uk-button uk-button-primary">
+                            <i class="uk-margin-small-right uk-icon" uk-icon="icon: user"></i>修 改
+                        </button>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block afterscript %}
+
+<script>
+
+        $(function(){
+            var vm = new Vue({
+                el: '#vm',
+                data: {
+                    oldpassword: '',
+                    password1: '',
+                    password2: ''
+                },
+                methods: {
+                    submit: function (event) {
+                        event.preventDefault();
+                        var $form = $('#vm');
+                        if (! this.oldpassword.trim()) {
+                            return $form.showFormError({data:'oldpassword', message:'请输入原密码'});
+                        }
+                        if (this.password1.length < 6) {
+                            return $form.showFormError({data:'password1', message:'新密码长度至少为6个字符'});
+                        }
+                        if (this.password1 !== this.password2) {
+                            return $form.showFormError({data:'password2', message:'两次输入的密码不一致'});
+                        }
+                        email = '{{__user__.email}}'.trim().toLowerCase(),
+                        $form.postJSON('/api/users/{{__user__.id}}', {
+                            oldpasswd: CryptoJS.SHA1(email + ':' + this.oldpassword).toString(),
+                            passwd: CryptoJS.SHA1(email + ':' + this.password1).toString()
+                        }, function (err, r) {
+                            if (!err) {
+                                UIkit.modal.alert('修改成功,请重新登录！').then(function() {location.assign('/signout');})
+                            }
+                        });
+                    }
+                }
+            });
+            $('#vm').show();
+        });
+
+</script>
+
+{% endblock %}

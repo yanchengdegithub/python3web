@@ -73,7 +73,7 @@
                             <ul class="uk-navbar-nav">
                                 {% if __user__ %}
                                     <li>
-                                        <a href="#"><i uk-icon="icon: user"></i> {{ __user__.name }}</a>
+                                        <a href="/manage/users/selfinfo"><i uk-icon="icon: user"></i> {{ __user__.name }}</a>
                                         <div class="uk-navbar-dropdown uk-margin-remove-top">
                                             <ul class="uk-nav uk-navbar-dropdown-nav">
                                                 {% if __user__.admin %}

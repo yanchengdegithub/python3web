@@ -392,6 +392,33 @@ async def api_reportMonthBlogs():
         reportBlogs[yearMon] = reportBlogs.get(yearMon, 0) + 1
 
     return reportBlogs
+
+#修改用户密码
+@post('/api/users/{id}')
+async def api_update_user(id, request, *, oldpasswd, passwd):
+    if not passwd or not oldpasswd:
+        raise APIValueError('passwd', '请输入信息有误！')
+    if not _RE_SHA1.match(oldpasswd) or not _RE_SHA1.match(passwd):
+        raise APIValueError('passwd')
+
+    user = await UsersModel.Users.find(id)
+    if len(user) == 0:
+        raise APIValueError('oldpassword', '此用户不存在！')
+
+    # check oldpasswd:
+    sha1 = hashlib.sha1()
+    sha1.update(id.encode('utf-8'))
+    sha1.update(b':')
+    sha1.update(oldpasswd.encode('utf-8'))
+    if user.passwd != sha1.hexdigest():
+        raise APIValueError('oldpassword', '原密码错误！')
+    # modify new passwd
+    sha1_passwd = '%s:%s' % (id, passwd)
+    user.passwd = hashlib.sha1(sha1_passwd.encode('utf-8')).hexdigest()
+    await user.update()
+    user.passwd = '******'
+    return user
+
 #===============================管理页面=======================
 
 #文章详情页
@@ -426,6 +453,13 @@ async def manage_users(*, page='1'):
     return {
         '__template__': 'manage_users.html',
         'page_index': get_page_index(page)
+    }
+
+#查看个人信息
+@get('/manage/users/selfinfo')
+async def manage_selfinfo():
+    return {
+        '__template__': 'manage_users_selfinfo.html',
     }
 
 #评论列表
