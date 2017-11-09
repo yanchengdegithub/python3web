@@ -386,12 +386,12 @@ async def api_delete_comments(request, *, id):
 @get('/api/reportMonthBlogs')
 async def api_reportMonthBlogs():
     reportBlogs = {}
-    blogs = await BlogsModel.Blogs.findAll(orderBy='created_at desc')
+    blogs = await BlogsModel.Blogs.findAll(orderBy='id desc')
     for b in blogs:
         yearMon = time.strftime("%Y-%m", time.localtime(b.created_at))
         reportBlogs[yearMon] = reportBlogs.get(yearMon, 0) + 1
-
-    return reportBlogs
+    sortReportBlogs = sorted(reportBlogs.items(), key=lambda sitem:sitem[0], reverse=True)
+    return json.dumps(sortReportBlogs)
 
 #修改用户密码
 @post('/api/users/{id}')

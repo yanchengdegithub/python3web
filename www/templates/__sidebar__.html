@@ -26,7 +26,7 @@
                             <h4>文章归档</h4>
                             <ul class="uk-list uk-list-divider">
                                 <li v-for="(rmb, key) in report_month_blogs">
-                                    <a :href="'/blogs/date/'+key" v-text="key" class="uk-link-reset"></a><span class="uk-badge uk-float-right"  v-text="rmb"></span>
+                                    <a :href="'/blogs/date/'+rmb[0]" v-text="rmb[0]" class="uk-link-reset"></a><span class="uk-badge uk-float-right"  v-text="rmb[1]"></span>
                                 </li>
                             </ul>
                         </div>
